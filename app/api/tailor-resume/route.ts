@@ -48,7 +48,10 @@ Please analyze both documents and create a tailored resume that:
 - Extract key technical skills and competencies mentioned in the job description that align with the candidate's experience
 - Do not include a professional summary section to save space for more experience details
 - Try to avoid removing whole experiences, find ways to keep them but make them more relevant to the job description
-- ALWAYS include a comprehensive skills section that AT THE BOTTOM OF THE RESUME that highlights relevant skills from BOTH the resume AND job posting
+- ALWAYS include a comprehensive skills section at the BOTTOM of the resume
+- Include MANY skills (15-20+) as a single array from BOTH the original resume AND the job description
+- Prioritize skills mentioned in the job description first, then add relevant skills from the resume
+- Include technical skills, tools, languages, frameworks, methodologies, and soft skills all in one list
 
 DO NOT miss any of these bullets.
 

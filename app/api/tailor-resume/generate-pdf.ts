@@ -108,9 +108,9 @@ export async function generatePDF(resumeData: any): Promise<Uint8Array> {
   const hasExperience = resumeData.experience && resumeData.experience.length > 0;
   const hasEducation = resumeData.education && resumeData.education.length > 0;
   const hasProjects = resumeData.projects && resumeData.projects.length > 0;
-  const hasSkills = resumeData.skills && 
-    ((resumeData.skills.technical && resumeData.skills.technical.length > 0) ||
-     (resumeData.skills.other && resumeData.skills.other.length > 0));
+  const hasSkills = Array.isArray(resumeData.skills) ? resumeData.skills.length > 0 : 
+    (resumeData.skills && ((resumeData.skills.technical && resumeData.skills.technical.length > 0) ||
+     (resumeData.skills.other && resumeData.skills.other.length > 0)));
 
   // EXPERIENCE
   if (hasExperience) {
@@ -223,19 +223,27 @@ export async function generatePDF(resumeData: any): Promise<Uint8Array> {
     drawText('SKILLS', margin, yPosition, 12, helveticaBold);
     yPosition -= 15;
     
-    if (resumeData.skills.technical && resumeData.skills.technical.length > 0) {
-      const techSkills = resumeData.skills.technical.join(', ');
-      const boldWidth = helveticaBold.widthOfTextAtSize('Technical: ', 10);
-      drawText('Technical: ', margin, yPosition, 10, helveticaBold);
-      yPosition = drawWrappedText(techSkills, margin + boldWidth, yPosition, 10, helvetica, contentWidth - boldWidth);
-      yPosition -= 6;
+    // Handle new array format (preferred - single comprehensive list)
+    if (Array.isArray(resumeData.skills)) {
+      const skillsText = resumeData.skills.join(', ');
+      yPosition = drawWrappedText(skillsText, margin, yPosition, 10, helvetica, contentWidth);
     }
-    
-    if (resumeData.skills.other && resumeData.skills.other.length > 0) {
-      const otherSkills = resumeData.skills.other.join(', ');
-      const boldWidth = helveticaBold.widthOfTextAtSize('Other: ', 10);
-      drawText('Other: ', margin, yPosition, 10, helveticaBold);
-      yPosition = drawWrappedText(otherSkills, margin + boldWidth, yPosition, 10, helvetica, contentWidth - boldWidth);
+    // Backward compatibility with old categorized format
+    else if (resumeData.skills && typeof resumeData.skills === 'object') {
+      if (resumeData.skills.technical && resumeData.skills.technical.length > 0) {
+        const techSkills = resumeData.skills.technical.join(', ');
+        const boldWidth = helveticaBold.widthOfTextAtSize('Technical: ', 10);
+        drawText('Technical: ', margin, yPosition, 10, helveticaBold);
+        yPosition = drawWrappedText(techSkills, margin + boldWidth, yPosition, 10, helvetica, contentWidth - boldWidth);
+        yPosition -= 6;
+      }
+      
+      if (resumeData.skills.other && resumeData.skills.other.length > 0) {
+        const otherSkills = resumeData.skills.other.join(', ');
+        const boldWidth = helveticaBold.widthOfTextAtSize('Other: ', 10);
+        drawText('Other: ', margin, yPosition, 10, helveticaBold);
+        yPosition = drawWrappedText(otherSkills, margin + boldWidth, yPosition, 10, helvetica, contentWidth - boldWidth);
+      }
     }
     // No divider after Skills - it's the last section
   }
