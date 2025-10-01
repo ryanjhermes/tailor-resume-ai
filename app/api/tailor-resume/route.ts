@@ -123,6 +123,7 @@ Return the tailored resume in the following JSON structure:
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Tailor resume API called');
     const formData = await request.formData();
     const resumeFile = formData.get('resume') as File;
     const jobDescription = formData.get('jobDescription') as string;
@@ -168,6 +169,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error processing resume:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }

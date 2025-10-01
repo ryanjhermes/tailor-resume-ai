@@ -17,16 +17,23 @@ export async function getOpenAIKey(): Promise<string> {
   }
 
   // Production: fetch from AWS Secrets Manager
-  const client = new SecretsManagerClient({ region: 'us-east-1' });
-  const response = await client.send(
-    new GetSecretValueCommand({ SecretId: 'tailor-resume-ai-OPENAI_API_KEY' })
-  );
+  console.log('Fetching OpenAI key from AWS Secrets Manager...');
+  try {
+    const client = new SecretsManagerClient({ region: 'us-east-1' });
+    const response = await client.send(
+      new GetSecretValueCommand({ SecretId: 'tailor-resume-ai-OPENAI_API_KEY' })
+    );
 
-  if (!response.SecretString) {
-    throw new Error('OpenAI API key not found in Secrets Manager');
+    if (!response.SecretString) {
+      throw new Error('OpenAI API key not found in Secrets Manager');
+    }
+
+    console.log('Successfully retrieved OpenAI key from Secrets Manager');
+    cachedKey = response.SecretString;
+    return cachedKey;
+  } catch (error) {
+    console.error('Failed to fetch secret from Secrets Manager:', error);
+    throw error;
   }
-
-  cachedKey = response.SecretString;
-  return cachedKey;
 }
 
