@@ -1,0 +1,172 @@
+import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
+import { generatePDF } from './generate-pdf';
+
+// Get OpenAI client (lazy initialization)
+function getOpenAIClient() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || '',
+  });
+}
+
+// Parse resume based on file type
+async function parseResume(file: File): Promise<string> {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  
+  if (file.type === 'application/pdf') {
+    // Use require instead of dynamic import to avoid pdf-parse initialization issues
+    const pdfParse = require('pdf-parse');
+    const data = await pdfParse(buffer);
+    return data.text;
+  } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    const mammoth = await import('mammoth');
+    const result = await mammoth.extractRawText({ buffer });
+    return result.value;
+  }
+  
+  throw new Error('Unsupported file format');
+}
+
+// Call OpenAI to tailor resume
+async function tailorResumeWithAI(resumeText: string, jobDescription: string): Promise<any> {
+  const prompt = `You are an expert resume writer and career coach. Your task is to tailor an existing resume to match a specific job description.
+
+IMPORTANT RULES:
+You will tailor the resume to match the job description.
+
+ORIGINAL RESUME:
+${resumeText}
+
+TARGET JOB DESCRIPTION:
+${jobDescription}
+
+Please analyze both documents and create a tailored resume that:
+- Reorganizes sections to prioritize the most relevant information for the job description
+- VERY IMPORTANT: REWORD bullet points to align with job responsibilites. MAKE SURE THE RESUME ALIGNS WELL WITH THE JOB. If this means replacing a bullet point with a new one, do it, so that it aligns with the job description.
+- Emphasizes transferable skills that match the job
+- Maintains relative factual accuracy from the original resume
+- Extract key technical skills and competencies mentioned in the job description that align with the candidate's experience
+- Do not include a professional summary section to save space for more experience details
+- Try to avoid removing whole experiences, find ways to keep them but make them more relevant to the job description
+- ALWAYS include a comprehensive skills section that AT THE BOTTOM OF THE RESUME that highlights relevant skills from BOTH the resume AND job posting
+
+DO NOT miss any of these bullets.
+
+Return the tailored resume in the following JSON structure:
+{
+  "name": "Full Name",
+  "contact": {
+    "email": "email@example.com",
+    "phone": "phone number",
+    "location": "City, State",
+    "linkedin": "LinkedIn URL (if available)",
+    "website": "Personal website (if available)"
+  },
+  "experience": [
+    {
+      "title": "Job Title",
+      "company": "Company Name",
+      "location": "City, State",
+      "dates": "Start Date - End Date",
+      "bullets": ["Achievement/responsibility", "Achievement/responsibility"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree Name",
+      "school": "School Name",
+      "location": "City, State",
+      "date": "Graduation Date",
+      "details": "GPA, honors, relevant coursework (if applicable)"
+    }
+  ],
+  "skills": ["Python", "JavaScript", "SQL", "Power BI", "Azure", "AWS", "Machine Learning", "Data Analysis", "Agile", "Leadership", "Problem-solving", "Communication", "Project Management"],
+  "projects": [
+    {
+      "name": "Project Name",
+      "description": "Brief description",
+      "bullets": ["Achievement", "Technology used"]
+    }
+  ]
+}
+`;
+
+  const openai = getOpenAIClient();
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: 'You are an expert resume writer. You only reorganize and reword existing information - you never fabricate experiences or skills.'
+      },
+      {
+        role: 'user',
+        content: prompt
+      }
+    ],
+    response_format: { type: 'json_object' },
+    temperature: 0.7,
+  });
+
+  const content = completion.choices[0].message.content;
+  if (!content) {
+    throw new Error('No response from AI');
+  }
+
+  return JSON.parse(content);
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const resumeFile = formData.get('resume') as File;
+    const jobDescription = formData.get('jobDescription') as string;
+
+    if (!resumeFile || !jobDescription) {
+      return NextResponse.json(
+        { error: 'Resume file and job description are required' },
+        { status: 400 }
+      );
+    }
+
+    // Check file size (10MB limit)
+    if (resumeFile.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: 'File size exceeds 10MB limit' },
+        { status: 400 }
+      );
+    }
+
+    // Parse the resume
+    const resumeText = await parseResume(resumeFile);
+
+    if (!resumeText || resumeText.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Could not extract text from resume' },
+        { status: 400 }
+      );
+    }
+
+    // Tailor resume using AI
+    const tailoredResume = await tailorResumeWithAI(resumeText, jobDescription);
+
+    // Generate PDF
+    const pdfBytes = await generatePDF(tailoredResume);
+
+    // Return PDF
+    return new NextResponse(Buffer.from(pdfBytes), {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="tailored-resume.pdf"',
+      },
+    });
+
+  } catch (error) {
+    console.error('Error processing resume:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+

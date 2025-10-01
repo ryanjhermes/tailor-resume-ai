@@ -1,0 +1,58 @@
+========================================
+  RESUME TAILOR - QUICK START
+========================================
+
+🚀 TO GET STARTED:
+
+1. Create your .env.local file:
+   
+   echo "OPENAI_API_KEY=your_key_here" > .env.local
+   
+   (Replace 'your_key_here' with your actual OpenAI API key)
+
+2. Start the development server:
+   
+   npm run dev
+
+3. Open your browser to:
+   
+   http://localhost:3001
+
+========================================
+
+✅ WHAT'S INCLUDED:
+
+- Beautiful UI with drag-and-drop upload
+- PDF and DOCX resume parsing  
+- OpenAI GPT-4 integration for smart tailoring
+- Professional PDF generation (ATS-friendly)
+- Deep blue gradient design
+- No data storage (privacy-first)
+
+========================================
+
+📝 HOW TO USE:
+
+1. Upload your resume (PDF or DOCX)
+2. Paste the job description
+3. Click "Generate Tailored Resume"
+4. Download your optimized PDF
+
+Takes ~20-30 seconds to process.
+
+========================================
+
+❗ IMPORTANT:
+
+- You MUST add your OpenAI API key to .env.local
+- File size limit: 10MB
+- Requires OpenAI API credits
+- No fake info is added - only reorganizes your real experience
+
+========================================
+
+📚 For more details, see:
+- README.md (full documentation)
+- SETUP.md (detailed setup guide)
+
+========================================
