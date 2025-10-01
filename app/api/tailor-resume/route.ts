@@ -16,7 +16,8 @@ async function parseResume(file: File): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
   
   if (file.type === 'application/pdf') {
-    // Use require instead of dynamic import to avoid pdf-parse initialization issues
+    // Use pdf-parse - the most reliable Node.js PDF parser
+    // No workers, no complex setup, just works in serverless environments
     const pdfParse = require('pdf-parse');
     const data = await pdfParse(buffer);
     return data.text;
@@ -147,6 +148,7 @@ export async function POST(request: NextRequest) {
     const resumeText = await parseResume(resumeFile);
 
     if (!resumeText || resumeText.trim().length === 0) {
+      console.error('Resume text is empty or invalid');
       return NextResponse.json(
         { error: 'Could not extract text from resume' },
         { status: 400 }

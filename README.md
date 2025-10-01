@@ -96,11 +96,6 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 - Make sure you're using GPT-4 (not GPT-3.5) for best results
 - Check OpenAI API status if requests are failing
 
-### "ENOENT: no such file or directory" error
-- This is a known issue with the pdf-parse library
-- A `test/` directory has been created as a workaround
-- If you've deleted it, recreate it: `mkdir -p test/data && echo "dummy" > test/data/05-versions-space.pdf`
-
 ## License
 
 MIT License - Feel free to use this for personal or commercial projects.

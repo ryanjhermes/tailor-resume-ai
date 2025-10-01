@@ -33,5 +33,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# pdf-parse workaround
-test/
+# testing
+# test/ - MUST be deployed for pdf-parse to work
