@@ -8,6 +8,7 @@
     "start": "next start -p 3001"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.899.0",
     "@types/formidable": "^3.4.5",
     "formidable": "^3.5.4",
     "mammoth": "^1.11.0",

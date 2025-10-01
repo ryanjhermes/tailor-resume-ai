@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { generatePDF } from './generate-pdf';
+import { getOpenAIKey } from '../lib/secrets';
 
-// Get OpenAI client (lazy initialization)
-function getOpenAIClient() {
+// Get OpenAI client (async because we fetch from Secrets Manager)
+async function getOpenAIClient() {
+  const apiKey = await getOpenAIKey();
   return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || '',
+    apiKey,
   });
 }
 
@@ -94,7 +96,7 @@ Return the tailored resume in the following JSON structure:
 }
 `;
 
-  const openai = getOpenAIClient();
+  const openai = await getOpenAIClient();
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o',
     messages: [
