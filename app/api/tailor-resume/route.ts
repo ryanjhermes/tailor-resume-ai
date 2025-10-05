@@ -15,13 +15,13 @@ async function getOpenAIClient() {
 async function parseResume(file: File): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
   
-  if (file.type === 'application/pdf') {
+  if (file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf')) {
     // Use pdf-parse - the most reliable Node.js PDF parser
     // No workers, no complex setup, just works in serverless environments
     const pdfParse = require('pdf-parse');
     const data = await pdfParse(buffer);
     return data.text;
-  } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+  } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.name?.toLowerCase().endsWith('.docx')) {
     const mammoth = await import('mammoth');
     const result = await mammoth.extractRawText({ buffer });
     return result.value;
@@ -32,7 +32,7 @@ async function parseResume(file: File): Promise<string> {
 
 // Call OpenAI to tailor resume
 async function tailorResumeWithAI(resumeText: string, jobDescription: string): Promise<any> {
-  const prompt = `You are an expert resume writer and career coach. Your task is to tailor an existing resume to match a specific job description.
+  const prompt = `You are an expert resume writer and career coach. Your task is to rebuild an existing resume to match a specific job description.
 
 IMPORTANT RULES:
 You will tailor the resume to match the job description.
