@@ -18,7 +18,7 @@ async function parseResume(file: File): Promise<string> {
   if (file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf')) {
     // Use pdf-parse - the most reliable Node.js PDF parser
     // No workers, no complex setup, just works in serverless environments
-    const pdfParse = require('pdf-parse');
+    const pdfParse = require('pdf-parse-debugging-disabled');
     const data = await pdfParse(buffer);
     return data.text;
   } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.name?.toLowerCase().endsWith('.docx')) {
